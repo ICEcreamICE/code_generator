@@ -1,0 +1,32 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python1",
+      "type": "python",
+      "request": "launch",
+      "program": "D:\\GHproj\\flow\\GEN.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "-src",
+        "D:\\GHproj\\RTL_CODE\\controlling_register.v"
+      ]
+    },
+    {
+      "name": "Python2",
+      "type": "python",
+      "request": "launch",
+      "program": "D:\\GHproj\\flow\\GEN.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "-src",
+        "D:\\GHproj\\RTL_CODE\\controlling_register.v"
+      ]
+    }
+  ]
+}

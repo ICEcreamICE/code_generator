@@ -87,10 +87,11 @@ class LineParser (OVERTURE):
     return _for_line
 
   def sub_func(self, being_matched):
-    if re.search('"', being_matched):
-      _qoute = "'''"
-    else:
-      _qoute = '"""'
+    _qoute = self.QuoteStyleSelection(being_matched)
+    # if re.search('"', being_matched):
+    #   _qoute = "'''"
+    # else:
+    #   _qoute = '"""'
     being_matched = being_matched.strip('\n')
     _string_size = len(being_matched)
     _tmp = re.finditer ("``{([^}]*)}", being_matched)
@@ -134,8 +135,7 @@ class LineParser (OVERTURE):
     else:
       print ("Unsuported ``{} condition! --> ", being_matched)
       exit(1)
- 
-    
+
     if _loop_completed == False:
       _value_list.append(_string_size)
       _value_list.append('')
@@ -192,6 +192,11 @@ class LineParser (OVERTURE):
       print ('Error from substituter')
       exit(1)
 
+  def PythonCommand(self, line):
+    _qoute = self.QuoteStyleSelection(line)
+    _SearchTriApostrophe = '\s?```\s?(.+)'
+    re.search (_SearchTriApostrophe, line)
+
   def Parser(self):
     MINE = self.dict
     #print ('parsing...')
@@ -210,7 +215,8 @@ class LineParser (OVERTURE):
     search_for     = '.?``FOR\s?{\s?(.+)\s?}\s?(.+)?'
 #    search_for     = '.?(?<!//)``FOR\s?{\s?(.+)\s?}\s?(.+)?'
     search_endfor  = '.?``ENDFOR(.+)?'
-    search_content = '^.+$'
+    #search_content = '^.+$'
+    search_content = '```'
     _InitialFunction =  'bui'+'ltins.X'+'Y' + 'T = ' + str(MINE) + '\n' #+'print("==================", CODEGEN)\n'
     _InitialImport = 'import sys,bu' + 'iltins\n' + _InitialFunction
     _dst_file_content = 'import sys \nsys.path.append ("' + self.dict['CF_DIR']  +'")\nfrom CF import *\n'
@@ -300,7 +306,6 @@ class LineParser (OVERTURE):
 #      for lines in _dst_file_content:
 #        print (lines + '\n')
 #        output_content.write (lines)
-      #_test = """print ('// *                                            HangZhou XinYun Photoelectric Technology Co. , Ltd\\n')"""
 #      _dst_file_content = """output_content.write ("i2c_slv #(.I2C_SLV_ADR_0(7'b111_0000), .I2C_SLV_ADR_1(7'b111_0100)) inst_i2c_slv (\\n")"""
       #print (_dst_file_content)
       if self.stat['FOR_NEST_LEVEL'] != 0:

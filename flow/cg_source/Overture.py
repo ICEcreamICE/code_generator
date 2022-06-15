@@ -193,4 +193,11 @@ class OVERTURE():
         return (_ReturnVal)
       except:
         print ("Wrong condition found, Plese check! --->", self.Name, InCond)
-        exit(1)  
+        exit(1)
+        
+  def QuoteStyleSelection(self, line):
+    if re.search('"', line):
+      _Quote = "'''"
+    else:
+      _Quote = '"""'
+    return _Quote

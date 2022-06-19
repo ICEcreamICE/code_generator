@@ -192,10 +192,13 @@ class LineParser (OVERTURE):
       print ('Error from substituter')
       exit(1)
 
-  def PythonCommand(self, line):
+  def ParsePythonCommand(self, line):
+    _writeString = ''
     _qoute = self.QuoteStyleSelection(line)
-    _SearchTriApostrophe = '\s?```\s?(.+)'
-    re.search (_SearchTriApostrophe, line)
+    _searchTriApostrophe = '\s?```\s?(.+)'
+    _result = re.search(_searchTriApostrophe, line)
+    _writeString = "+".join(_qoute, _result.group(1), _qoute)
+    return _writeString
 
   def Parser(self):
     MINE = self.dict
@@ -217,11 +220,11 @@ class LineParser (OVERTURE):
     search_endfor  = '.?``ENDFOR(.+)?'
     #search_content = '^.+$'
     search_content = '```'
-    _InitialFunction =  'bui'+'ltins.X'+'Y' + 'T = ' + str(MINE) + '\n' #+'print("==================", CODEGEN)\n'
-    _InitialImport = 'import sys,bu' + 'iltins\n' + _InitialFunction
-    _dst_file_content = 'import sys \nsys.path.append ("' + self.dict['CF_DIR']  +'")\nfrom CF import *\n'
+    #_InitialFunction =  'bui'+'ltins.X'+'Y' + 'T = ' + str(MINE) + '\n' #+'print("==================", CODEGEN)\n'
+    #_InitialImport = 'import sys,bu' + 'iltins\n' + _InitialFunction
+    #_dst_file_content = 'import sys \nsys.path.append ("' + self.dict['CF_DIR']  +'")\nfrom CF import *\n'
     #_dst_file_content = '\"\"\"\n'
-    exec (_InitialImport)
+    #exec (_InitialImport)
     with open (self.src_file, 'r') as parsing_file:
       sys.path.append (self.dict['CF_DIR']) 
       _Cfg = importlib.import_module ('CF')
@@ -278,6 +281,15 @@ class LineParser (OVERTURE):
           elif (result_endfor != None):
             #print ('6')
             _dst_file_content = self.for_loop('ENDFOR', 'False', _dst_file_content)
+          elif (result_content != None):
+            #print ('7')
+            line = self.ParsePythonCommand(line)
+            _dst_file_content = (_dst_file_content
+                                 + _space * (int(self.stat['IF_NEST_LEVEL']) + int(self.stat['FOR_NEST_LEVEL']))
+                                 + "output_content.write ("
+                                 + line
+                                 + " + \"\\n\")\n"
+                                 )
           else:
             if re.search ('``', line) != None:
               #TODO: causion this line may has \n as blow condition

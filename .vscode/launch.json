@@ -13,7 +13,9 @@
       "justMyCode": true,
       "args": [
         "-src",
-        "D:\\GHproj\\RTL_CODE\\controlling_register.v"
+        "D:\\GHproj\\RTL_CODE\\controlling_register.v",
+        "-dst",
+        "D:\\GHproj\\RTL_CODE\\done.v"
       ]
     },
     {
@@ -25,7 +27,9 @@
       "justMyCode": true,
       "args": [
         "-src",
-        "D:\\GHproj\\RTL_CODE\\controlling_register.v"
+        "D:\\OneDrive\\GHproj\\RTL_CODE\\controlling_register.v",
+        "-dst",
+        "D:\\OneDrive\\GHproj\\RTL_CODE\\done.v"
       ]
     }
   ]

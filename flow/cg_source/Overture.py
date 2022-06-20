@@ -150,7 +150,7 @@ class OVERTURE():
 
   def SubstituteFunctionName(self, src):
     _SearchFunctionName = '(`)((\w+)\((\w?)+\))'
-    _SubstitueFunctionName = 'Cfg.CF(MINE).\g<2>'
+    _SubstitueFunctionName = '_Cfg.CF(MINE).\g<2>'
     _SearchFunctionNameResult = re.search(_SearchFunctionName, src)
     if _SearchFunctionNameResult != None:
       _SearchFunctionReplace = re.sub(_SearchFunctionName, _SubstitueFunctionName, src)

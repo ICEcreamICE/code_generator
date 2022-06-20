@@ -197,7 +197,8 @@ class LineParser (OVERTURE):
     _qoute = self.QuoteStyleSelection(line)
     _searchTriApostrophe = '\s?```\s?(.+)'
     _result = re.search(_searchTriApostrophe, line)
-    _writeString = "+".join(_qoute, _result.group(1), _qoute)
+    # _writeString = " ".join([_qoute, _result.group(1), _qoute])
+    _writeString = _result.group(1)
     return _writeString
 
   def Parser(self):
@@ -224,10 +225,12 @@ class LineParser (OVERTURE):
     #_InitialImport = 'import sys,bu' + 'iltins\n' + _InitialFunction
     #_dst_file_content = 'import sys \nsys.path.append ("' + self.dict['CF_DIR']  +'")\nfrom CF import *\n'
     #_dst_file_content = '\"\"\"\n'
+    _dst_file_content = ''
     #exec (_InitialImport)
     with open (self.src_file, 'r') as parsing_file:
-      sys.path.append (self.dict['CF_DIR']) 
-      _Cfg = importlib.import_module ('CF')
+      # sys.path.append (self.dict['CF_DIR']) 
+      sys.path.append("./RTL_CODE") 
+      _Cfg = importlib.import_module ('CONF')
       file_lines = parsing_file.readlines()
       #while (line_number < len(file_lines)):
       for line in file_lines:
@@ -286,9 +289,8 @@ class LineParser (OVERTURE):
             line = self.ParsePythonCommand(line)
             _dst_file_content = (_dst_file_content
                                  + _space * (int(self.stat['IF_NEST_LEVEL']) + int(self.stat['FOR_NEST_LEVEL']))
-                                 + "output_content.write ("
                                  + line
-                                 + " + \"\\n\")\n"
+                                 + "\n"
                                  )
           else:
             if re.search ('``', line) != None:
@@ -319,7 +321,7 @@ class LineParser (OVERTURE):
 #        print (lines + '\n')
 #        output_content.write (lines)
 #      _dst_file_content = """output_content.write ("i2c_slv #(.I2C_SLV_ADR_0(7'b111_0000), .I2C_SLV_ADR_1(7'b111_0100)) inst_i2c_slv (\\n")"""
-      #print (_dst_file_content)
+      print (_dst_file_content)
       if self.stat['FOR_NEST_LEVEL'] != 0:
         print ("Unmatched ``FOR-``ENDFOR pair, please check!")
         exit(1)

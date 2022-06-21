@@ -1,5 +1,5 @@
 # code_generator
-# New thoughts is added for simple functions.
+  New thoughts is added for simple functions.
 
 # Supported Syntax
 1. "``IF-``ELSIF-``ENDIF" | if-else pair to support branch logic
@@ -7,5 +7,5 @@
 3. "```"                  | Python command line start ancher
 4. "```p"                 | Python command line for strings which will be printed to code file
 
-Example:
+# Example:
   GEN -src <SourceFile> -dst <DestinationFile>

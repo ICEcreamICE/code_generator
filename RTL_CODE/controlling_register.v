@@ -1,19 +1,19 @@
 //Registers which has W/R bus that can be access from a certain master
 /// #start python code inside verilog RTL file
-``` ADDR_MSB = 32
-``` ADDR_LSB = 0
-``` ADDR_WIDTH = ADDR_MSB - ADDR_LSB + 1
-``` WRITE_DATA_MSB = 32
-``` WRITE_DATA_LSB = 0
-``` READ_DATA_LSB = 20
-``` READ_DATA_MSB = 0
-``` ONE_HALF_WIDTH = 16
-``` ONE_FORTH_WIDTH = 8
-``` ONE_HALF_ADDR = "AA"
-``` ONE_FORTH_ADDR = "55"
-``` ONE_HALF_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_HALF_WIDTH + 1
-``` ONE_FORTH_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_FORTH_WIDTH + 1
-``` ONE_FORTH_COUNTER_ENABLE = True
+```ADDR_MSB = 32
+```ADDR_LSB = 0
+```ADDR_WIDTH = ADDR_MSB - ADDR_LSB + 1
+```WRITE_DATA_MSB = 32
+```WRITE_DATA_LSB = 0
+```READ_DATA_LSB = 20
+```READ_DATA_MSB = 0
+```ONE_HALF_WIDTH = 16
+```ONE_FORTH_WIDTH = 8
+```ONE_HALF_ADDR = "AA"
+```ONE_FORTH_ADDR = "55"
+```ONE_HALF_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_HALF_WIDTH + 1
+```ONE_FORTH_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_FORTH_WIDTH + 1
+```ONE_FORTH_COUNTER_ENABLE = True
 
 module controlling_register(
 input wire clock,
@@ -27,8 +27,8 @@ output reg [``{READ_DATA_MSB} : ``{READ_DATA_LSB}] read_data,
 output reg one_forth_pipe_enable,
 ``ENDIF
 output reg one_half_pipe_enalbe,
-``` for i in range(3):
-``` print(input wire for_test_``{i})
+```for i in range(3):
+```p  f"input wire for_test_{i};\n"
 
 ``FOR {i in range(3)}
 	``IF {i==3}

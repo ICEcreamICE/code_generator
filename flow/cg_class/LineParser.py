@@ -195,10 +195,15 @@ class LineParser (OVERTURE):
   def ParsePythonCommand(self, line):
     _writeString = ''
     _qoute = self.QuoteStyleSelection(line)
-    _searchTriApostrophe = '\s?```\s?(.+)'
+    _searchTriApostrophe = '\s?```(.+)'
+    _searchTriApoString = '\s?```p((\s?)+)(.+)'
     _result = re.search(_searchTriApostrophe, line)
+    _resultString = re.search(_searchTriApoString, line)
     # _writeString = " ".join([_qoute, _result.group(1), _qoute])
-    _writeString = _result.group(1)
+    if _resultString:
+      _writeString = _resultString.group(1) + 'output_content.write(' + _resultString.group(3) + ")"
+    else:
+      _writeString = _result.group(1)
     return _writeString
 
   def Parser(self):

@@ -1,7 +1,149 @@
+from opcode import hascompare
 from cg_source.Overture import *
 import re, sys
 
-class ModuleParser(OVERTURE):
+class LINES(OVERTURE):
+  def __init__(self, line):
+    self.line = line
+    self.lineNum = 0
+    self.linesplits = re.split("( )+", self.line)
+    self.name = None #name, ohters(None)
+    self.type = None #port, instance, reg/wire, others
+    self.arrayCnt = 0
+    self.width = []
+    self.array = False
+    self.direction = None #input/output
+    self.PortDeclaration = {
+      'input'  : True,
+      'output' : True,
+      'inout'  : True
+    }
+    self.SignalDeclaration = {
+      'reg'  : True,
+      'wire' : True
+    }
+    self.WidthAncher = '(\[.+:.+\])+'
+    self.NameAncher = '([a-zA-Z0-9`_$]+);'
+    self.UpdateInfo(line)
+
+  def HasComment(self, element):
+    _result = re.search(r"//.+", element)
+    if _result != None:
+      return True
+    else:
+      return False
+  
+  def HasBracket(self, element):
+    _result = re.search(self.WidthAncher, element)
+    if _result != None:
+      return True
+    else:
+      return False
+
+  def UpdateArray(self):
+    self.arrayCnt = self.arrayCnt + 1
+    if self.arrayCnt > 1:
+      self.array = True
+
+  def UpdateType(self, lst):
+    if lst[0] in self.Signal:
+      self.type = lst[0]
+      lst = lst.pop(0)
+      return lst
+    else:
+      print ("cannot find any type in port")
+      exit(1)
+
+  def UpdateWidth(self, lst):
+      _result = re.search(self.WidthAncher, lst[0])
+      if _result != None:
+        self.width.append(lst)
+        lst.pop(0)
+        self.UpdateArray()
+        return lst
+      else:
+        if self.arrayCnt < 1:
+          self.width.append(0)
+          self.UpdateArray()
+        else:
+          print ("wrong type in line", lst[0])
+          exit(1)
+        return lst
+
+  def UpdateName(self, lst):
+    _result = re.search(self.NameAncher, lst[0])
+    if _result != None:
+     self.name = _result.group(1)
+     lst = lst.pop(0)
+     return lst
+    else:
+      print ("name cannot found, abort!")
+      exit(1)
+
+  def UpdateDirection(self, lst):
+    self.direction = lst[0]
+    lst = lst.pop(0)
+    return lst
+
+  def UpdateMisc(self, lst):
+    _isComment = False
+    while len(lst) != 0:
+      if not _isComment:
+        if self.HasComment(lst):
+          _isComment = True
+          self.comment = ' '.jion(self.comment, lst[0])
+          lst.pop(0)
+          break
+        else:
+          lst = self.UpdateWidth(lst)
+      else:
+        self.comment = ' '.jion(self.comment, lst[0])
+        lst.pop(0)
+
+
+  def FindPorts(self):
+    _isPort = False
+    _list = self.linesplits
+    if _list[0] in self.PortDeclaration.keys():
+      _list = self.UpdateDirection(_list[0])
+      _isPort = True
+      _list = self.UpdateType(_list)
+      _list = self.UpdateWidth(_list)
+      _list = self.UpdateName(_list)
+      self.UpdateMisc(_list)
+      return _isPort
+    else:
+      return _isPort
+  
+  def FindDeclaration(self):
+    _isSignal = False
+    _list = self.linesplits
+    if _list[0] in self.SignalDeclaration.keys():
+      _isSignal = True
+      _list = self.UpdateType(_list)
+      _list = self.UpdateWidth(_list)
+      _list = self.UpdateName(_list)
+      self.UpdateMisc(_list)
+      return _isSignal
+    else:
+      return _isSignal
+
+  def FindInstance(self):
+    _status = False
+    return _status, None
+
+  def UpdateInfo(self):
+    if self.FindPorts():
+      return "port"
+    elif self.FindDeclaration():
+      return "signal"
+    elif self.FindInstance():
+      return "instance"
+    else:
+      return None
+
+
+class MODULES(OVERTURE):
   def __init__(self):
     super().__init__()
     self.Name = "ModuleParser"

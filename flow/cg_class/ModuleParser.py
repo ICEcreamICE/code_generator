@@ -1,4 +1,5 @@
 from opcode import hascompare
+from telnetlib import Telnet
 from cg_source.Overture import *
 import re, sys
 
@@ -21,6 +22,14 @@ class LINES(OVERTURE):
     self.SignalDeclaration = {
       'reg'  : True,
       'wire' : True
+    }
+    self.VerilogCMD = {
+      'begin'  : True,
+      'end'    : True,
+      'always' : True,
+      'assign' : True,
+      'case'   : True,
+      'endcase': True
     }
     self.WidthAncher = '(\[.+:.+\])+'
     self.NameAncher = '([a-zA-Z0-9`_$]+);'
@@ -129,8 +138,10 @@ class LINES(OVERTURE):
       return _isSignal
 
   def FindInstance(self):
-    _status = False
-    return _status, None
+    _isInstance = False
+    _list = self.linesplits
+
+    return _isInstance
 
   def UpdateInfo(self):
     if self.FindPorts():

@@ -1,9 +1,10 @@
 from opcode import hascompare
+from operator import mod
 from telnetlib import Telnet
 from cg_source.Overture import *
 import re, sys
 
-class LINES(OVERTURE):
+class LINE(OVERTURE):
   def __init__(self, line):
     self.line = line
     self.lineNum = 0
@@ -154,7 +155,7 @@ class LINES(OVERTURE):
       return None
 
 
-class MODULES(OVERTURE):
+class MODULE(OVERTURE):
   def __init__(self):
     super().__init__()
     self.Name = "ModuleParser"
@@ -184,9 +185,49 @@ class MODULES(OVERTURE):
 
 # input Type [MSB:LSB] SignalName --?[ArrayLeft:ArrayRight]--;
 
-  def FindContents(self, key, regex, line):
-    _lineLST = re.split('( )+', line)
-    _re = ''.join('(', regex, ')')
-    _group = _re.search(line)
-    
-    return 
+  def FindContents(self, lines):
+    _lineDict={}
+    _lineNumber=0
+    for line in lines:
+      exec('_lineDict', r'={line', _lineNumber, r':', LINE.UpdateInfo(line), r'}')
+      _lineNumber+=1
+    return _lineDict
+
+class TOP():
+  def __init__(self):
+    self.Modules={}
+
+  def ModuleDeclaration(self, lines, moduleName):
+    _dictModule={}
+    exec('_dictModule', r'={', moduleName, ':', MODULE.FindContents(lines), r'}')
+    return _dictModule
+
+class GLOBAL():
+  def __init__(self):
+    self.filelist=[]
+    self.lineCache=[]
+    self.moduleSearch=r'\s?module\s?(\w+)\s?(?'
+    self.modules={}
+
+  def FindModule(self, f):
+    _moduleName=''
+    for l in f:
+      self.lineCache.append(l.strip('\n'))
+      if 'endmodule' in l:
+        self.modules=self.FileAnalyzer(_moduleName)
+        self.lineCache=[]
+        _moduleName=''
+      elif re.search(self.moduleSearch, l):
+        _result=re.search(self.moduleSearch, l)
+        _moduleName=_result.group(1)
+      else:
+        continue
+
+  def FileAnalyzer(self, moduleName):
+    exec(str(moduleName), '=', TOP.ModuleDeclaration(self.lineCache))
+    exec('self.modules.update', '(', str(moduleName), ')')
+
+  def FileReader(self, lst):
+    for f in lst:
+      _file = open(f)
+      self.FindModule(_file)

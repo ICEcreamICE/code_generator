@@ -11,9 +11,9 @@ input wire read_enalbe,
 output reg [0 : 20] read_data,
 output reg one_forth_pipe_enable, 
 output reg one_half_pipe_enalbe, 
-input wire for_test_0;
-input wire for_test_1;
-input wire for_test_2;
+input wire [0:0] for_test_0;
+input wire [1:0] for_test_1;
+input wire [2:0] for_test_2;
  
 output reg test_0,
 output reg test_1,

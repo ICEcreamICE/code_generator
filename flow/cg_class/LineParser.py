@@ -161,7 +161,7 @@ class LineParser (OVERTURE):
     _writeString = ''
     _qoute = self.QuoteStyleSelection(line)
     _searchTriApostrophe = '\s?```(.+)'
-    _searchTriApoString = '\s?````p((\s?)+)(.+)'
+    _searchTriApoString = '\s?```p((\s?)+)(.+)'
     _result = re.search(_searchTriApostrophe, line)
     _resultString = re.search(_searchTriApoString, line)
     # _writeString = " ".join([_qoute, _result.group(1), _qoute])

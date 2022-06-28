@@ -15,26 +15,34 @@ class LINE(OVERTURE):
     self.width = []
     self.array = False
     self.direction = None #input/output
-    self.PortDeclaration = {
-      'input'  : True,
-      'output' : True,
-      'inout'  : True
-    }
-    self.SignalDeclaration = {
-      'reg'  : True,
-      'wire' : True
-    }
-    self.VerilogCMD = {
-      'begin'  : True,
-      'end'    : True,
-      'always' : True,
-      'assign' : True,
-      'case'   : True,
-      'endcase': True
-    }
+    self.autoInstancName=''
+    self.autoInstanceSkipPort=''
+    self.PortDeclaration = [
+      'input', 'output', 'inout'
+    ]
+    self.SignalDeclaration = [
+      'reg', 'wire'
+    ]
+    self.VerilogCMD = [
+      'always', 'assign', 'case', 'endcase'
+    ]
+    self.keywords = [
+      'always', 'assign', 'case', 'endcase', 'begin', 'end',
+      'if', 'else'
+    ]
     self.WidthAncher = '(\[.+:.+\])+'
-    self.NameAncher = '([a-zA-Z0-9`_$]+);'
+    self.NameAncher = '([a-zA-Z0-9`_$]+)'
+    self.LineAncher = '[,;]'
+    self.InstanceAncher = '(\w+)'
+    self.InstancePort = '\.(\w+)\s?\(.*\)\s?,'
     self.UpdateInfo(line)
+
+  def HasKeyword(self, element, lst):
+    for e in lst:
+      if element == e:
+        return True
+      else:
+        return False
 
   def HasComment(self, element):
     _result = re.search(r"//.+", element)
@@ -49,6 +57,9 @@ class LINE(OVERTURE):
       return True
     else:
       return False
+
+  def UpdateInstanceSkipPort(self):
+    pass
 
   def UpdateArray(self):
     self.arrayCnt = self.arrayCnt + 1
@@ -110,11 +121,10 @@ class LINE(OVERTURE):
         self.comment = ' '.jion(self.comment, lst[0])
         lst.pop(0)
 
-
   def FindPorts(self):
     _isPort = False
     _list = self.linesplits
-    if _list[0] in self.PortDeclaration.keys():
+    if self.HasKeyword(_list[0], self.PortDeclaration):
       _list = self.UpdateDirection(_list[0])
       _isPort = True
       _list = self.UpdateType(_list)
@@ -128,7 +138,7 @@ class LINE(OVERTURE):
   def FindDeclaration(self):
     _isSignal = False
     _list = self.linesplits
-    if _list[0] in self.SignalDeclaration.keys():
+    if self.HasKeyword(_list[0], self.SignalDeclaration):
       _isSignal = True
       _list = self.UpdateType(_list)
       _list = self.UpdateWidth(_list)
@@ -141,7 +151,11 @@ class LINE(OVERTURE):
   def FindInstance(self):
     _isInstance = False
     _list = self.linesplits
-
+    for e in _list:
+      if self.HasKeyword(e, self.keywords):
+        return _isInstance
+      else:
+        continue
     return _isInstance
 
   def UpdateInfo(self):
@@ -184,7 +198,6 @@ class MODULE(OVERTURE):
     self.instance = {}
 
 # input Type [MSB:LSB] SignalName --?[ArrayLeft:ArrayRight]--;
-
   def FindContents(self, lines):
     _lineDict={}
     _lineNumber=0

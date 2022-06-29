@@ -35,7 +35,7 @@ class LINE(OVERTURE):
     self.LineAncher = '[,;]'
     self.InstanceAncher = '(\w+)'
     self.InstancePortAncher = '\.(\w+)'
-    self.commentAncher = '\/\/\s?'
+    self.commentAncher = '\/\/'
     self.UpdateInfo(line)
 
   def HasKeyword(self, element, lst):

@@ -13,9 +13,10 @@
 ```ONE_FORTH_ADDR = "55"
 ```ONE_HALF_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_HALF_WIDTH + 1
 ```ONE_FORTH_READ_ZREO_WIDTH = READ_DATA_MSB - ONE_FORTH_WIDTH + 1
-```ONE_FORTH_COUNTER_ENABLE = True
+```ONE_FORTH_COUNTER_ENABLE = False
+```prefix = "EngineTEST"
 
-module controlling_register(
+module ``{prefix}_controlling_register(
 input wire clock,
 input wire reset,
 input wire [``{ADDR_MSB} : ``{ADDR_LSB}] address,
@@ -28,15 +29,15 @@ output reg one_forth_pipe_enable,
 ``ENDIF
 output reg one_half_pipe_enalbe,
 ```for i in range(3):
-```p  f"input wire for_test_{i};\n"
+````p  f"input wire for_test_{i};\n"
 
 ``FOR {i in range(3)}
-	``IF {i==3}
-output reg test_``{i}
+	``IF {i==1}
+output reg if_test_``{i}
 	``ELSE
-output reg test_``{i},
-``ENDFOR
+output reg else_test_``{i},
 	``ENDIF
+``ENDFOR
 );
 
 always @(posedge clock, negedge reset) begin
@@ -71,5 +72,7 @@ always @* begin
 	else if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && read_enable) begin
 	   read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
 	end
+	``ELSE
+		assign read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
 ``ENDIF
 end

@@ -37,7 +37,7 @@ class LINE(OVERTURE):
     self.InstanceAncher = '(\w+)'
     self.InstancePortAncher = '\.(\w+)'
     self.commentAncher = '\/\/'
-    self.UpdateInfo()
+    self.attribute = self.UpdateInfo()
   
   def IsBlankLine(self, line):
     _result=re.search('^[ ]*$', line)
@@ -106,6 +106,8 @@ class LINE(OVERTURE):
         if self.arrayCnt < 1:
           self.width.append(0)
           self.UpdateArray()
+        elif self.arrayCnt == 1:
+          pass
         else:
           print ("wrong type in line", lst[0])
           exit(1)
@@ -147,8 +149,10 @@ class LINE(OVERTURE):
 
   def FindComment(self):
     _isComment = False
-    _list = list(self.linesplits)
-    if re.search(self.commentAncher, _list[0]):
+    _list = self.linesplits
+    if len(_list) == 0:
+      return _isComment
+    elif re.search(self.commentAncher, _list[0]):
       _isComment = True
       return _isComment
     else:
@@ -156,7 +160,7 @@ class LINE(OVERTURE):
 
   def FindPorts(self):
     _isPort = False
-    _list = list(self.linesplits)
+    _list = self.linesplits
     if self.HasKeyword(_list[0], self.PortDeclaration):
       _list = self.UpdateDirection(_list)
       _isPort = True
@@ -170,7 +174,7 @@ class LINE(OVERTURE):
   
   def FindDeclaration(self):
     _isSignal = False
-    _list = list(self.linesplits)
+    _list = self.linesplits
     if self.HasKeyword(_list[0], self.SignalDeclaration):
       _isSignal = True
       _list = self.UpdateType(_list)
@@ -183,7 +187,7 @@ class LINE(OVERTURE):
 
   def FindInstance(self):
     _isInstance = False
-    _list = list(self.linesplits)
+    _list = self.linesplits
     for e in _list:
       if self.HasKeyword(e, self.keywords):
         return _isInstance
@@ -233,6 +237,7 @@ class MODULE(OVERTURE):
     self.input = {}
     self.output = {}
     self.instance = {}
+    self.line=''
 
 # input Type [MSB:LSB] SignalName --?[ArrayLeft:ArrayRight]--;
   def FindContents(self, lines):
@@ -240,13 +245,20 @@ class MODULE(OVERTURE):
     _lineNumber=0
     for line in lines:
       print (_lineNumber, line)
-      _line=LINE(line, _lineNumber)
-      print(id(_line))
-      _execContents=''.join(['_lineDict', '={\'_line', str(_lineNumber), '\':', '_line.UpdateInfo()', '}'])
-      # exec('_lineDict', r'={line', _lineNumber, r':', line.UpdateInfo(), r'}')
+      _key = 'line' + str(_lineNumber)
+      _execContents= ''.join(['temp', '=', 'LINE(line, _lineNumber)'])
+      # print(id(_line))
+      # _execContents=''.join(['_lineDict', '={\'line', str(_lineNumber), '\':', LINE(line, _lineNumber), '}'])
       print ('a')
-      exec(_execContents)
-      print ('b', '\n')
+      exec(_execContents, globals(), locals())
+      print ('b', '\n', locals())
+
+      _lineDict[_key] = locals()['temp']
+      # _execContents=''.join(['_lineDict', '={\'_line', str(_lineNumber), '\':', '_line.UpdateInfo()', '}'])
+      # exec('_lineDict', r'={line', _lineNumber, r':', line.UpdateInfo(), r'}')
+      # print ('a')
+      # exec(_execContents)
+      # print ('b', '\n')
       _lineNumber+=1
     return _lineDict
 

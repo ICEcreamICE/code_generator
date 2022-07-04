@@ -1,3 +1,4 @@
+from lzma import MODE_FAST
 from opcode import hascompare
 from operator import mod
 from telnetlib import Telnet
@@ -5,15 +6,15 @@ from cg_source.Overture import *
 import re, sys
 
 class LINE(OVERTURE):
-  def __init__(self, line):
-    self.line = line
-    self.lineNum = None
-    self.linesplits = re.split("( )+", self.line)
+  def __init__(self, line, number):
+    self.line = line.rstrip()
+    self.lineNum = number
+    self.linesplits = re.split(" ", self.line.strip(',|;'))
     self.name = None #name, ohters(None)
     self.type = None #port, instance, reg/wire, others
-    self.arrayCnt = None
-    self.width = None
-    self.array = None
+    self.arrayCnt = 0
+    self.width = []
+    self.array = False
     self.direction = None #input/output
     self.instanceName = None
     self.instancePort = None
@@ -36,7 +37,14 @@ class LINE(OVERTURE):
     self.InstanceAncher = '(\w+)'
     self.InstancePortAncher = '\.(\w+)'
     self.commentAncher = '\/\/'
-    self.UpdateInfo(line)
+    self.UpdateInfo()
+  
+  def IsBlankLine(self, line):
+    _result=re.search('^[ ]*$', line)
+    if _result != None:
+      return True
+    else:
+      return False
 
   def HasKeyword(self, element, lst):
     for e in lst:
@@ -70,9 +78,8 @@ class LINE(OVERTURE):
         self.instancePort=lst[0]
         return True
       else:
-        print ('wrong verilog syntax, please check!', '--->', lst[0], 'in', self.line)
+        print ('wrong verilog syntax, please check!', '--->', lst[0], 'in', self.line, 'line num: ', self.lineNum)
         exit(0)
-        
 
   def UpdateArray(self):
     self.arrayCnt = self.arrayCnt + 1
@@ -80,9 +87,9 @@ class LINE(OVERTURE):
       self.array = True
 
   def UpdateType(self, lst):
-    if lst[0] in self.Signal:
-      self.type = lst[0]
-      lst = lst.pop(0)
+    if (lst[0]) in self.SignalDeclaration:
+      self.type = lst.pop(0)
+      # self.direction = lst.pop(0)
       return lst
     else:
       print ("cannot find any type in port")
@@ -90,9 +97,9 @@ class LINE(OVERTURE):
 
   def UpdateWidth(self, lst):
       _result = re.search(self.WidthAncher, lst[0])
+      print ('array cnt id is', id(self.arrayCnt))
       if _result != None:
-        self.width.append(lst)
-        lst.pop(0)
+        self.width.append(lst.pop(0))
         self.UpdateArray()
         return lst
       else:
@@ -108,15 +115,16 @@ class LINE(OVERTURE):
     _result = re.search(self.NameAncher, lst[0])
     if _result != None:
      self.name = _result.group(1)
-     lst = lst.pop(0)
+     lst.pop(0)
      return lst
     else:
       print ("name cannot found, abort!")
       exit(1)
 
   def UpdateDirection(self, lst):
-    self.direction = lst[0]
-    lst = lst.pop(0)
+    # self.direction = lst[0]
+    self.direction = lst.pop(0)
+    # lst = lst.pop(0)
     return lst
 
   def UpdateMisc(self, lst):
@@ -134,9 +142,12 @@ class LINE(OVERTURE):
         self.comment = ' '.jion(self.comment, lst[0])
         lst.pop(0)
 
+  def FindBlank(self):
+    return self.IsBlankLine(self.line)
+
   def FindComment(self):
     _isComment = False
-    _list = self.linesplits
+    _list = list(self.linesplits)
     if re.search(self.commentAncher, _list[0]):
       _isComment = True
       return _isComment
@@ -145,9 +156,9 @@ class LINE(OVERTURE):
 
   def FindPorts(self):
     _isPort = False
-    _list = self.linesplits
+    _list = list(self.linesplits)
     if self.HasKeyword(_list[0], self.PortDeclaration):
-      _list = self.UpdateDirection(_list[0])
+      _list = self.UpdateDirection(_list)
       _isPort = True
       _list = self.UpdateType(_list)
       _list = self.UpdateWidth(_list)
@@ -159,7 +170,7 @@ class LINE(OVERTURE):
   
   def FindDeclaration(self):
     _isSignal = False
-    _list = self.linesplits
+    _list = list(self.linesplits)
     if self.HasKeyword(_list[0], self.SignalDeclaration):
       _isSignal = True
       _list = self.UpdateType(_list)
@@ -172,7 +183,7 @@ class LINE(OVERTURE):
 
   def FindInstance(self):
     _isInstance = False
-    _list = self.linesplits
+    _list = list(self.linesplits)
     for e in _list:
       if self.HasKeyword(e, self.keywords):
         return _isInstance
@@ -181,21 +192,23 @@ class LINE(OVERTURE):
     return _isInstance
 
   def UpdateInfo(self):
-    if self.FindComment():
-      return "comment"
+    if self.FindBlank():
+      return r"blank"
+    elif self.FindComment():
+      return r"comment"
     elif self.FindPorts():
-      return "port"
+      return r"port"
     elif self.FindDeclaration():
-      return "signal"
+      return r"signal"
     elif self.FindInstance():
-      return "instance"
+      return r"instance"
     else:
       return None
 
 
 class MODULE(OVERTURE):
   def __init__(self):
-    super().__init__()
+    # super().__init__()
     self.Name = "ModuleParser"
     self.LineNumber = 0
     self.PortDeclaration = {
@@ -213,9 +226,9 @@ class MODULE(OVERTURE):
       'line0': self.LineType
     }
     self.ModuleTree = {
-      'ModuleName1' : {
+      'ModuleName1' : [
         self.LineContents
-      }
+      ]
     }
     self.input = {}
     self.output = {}
@@ -226,25 +239,36 @@ class MODULE(OVERTURE):
     _lineDict={}
     _lineNumber=0
     for line in lines:
-      exec('_lineDict', r'={line', _lineNumber, r':', LINE.UpdateInfo(line), r'}')
+      print (_lineNumber, line)
+      _line=LINE(line, _lineNumber)
+      print(id(_line))
+      _execContents=''.join(['_lineDict', '={\'_line', str(_lineNumber), '\':', '_line.UpdateInfo()', '}'])
+      # exec('_lineDict', r'={line', _lineNumber, r':', line.UpdateInfo(), r'}')
+      print ('a')
+      exec(_execContents)
+      print ('b', '\n')
       _lineNumber+=1
     return _lineDict
 
 class TOP():
   def __init__(self):
-    self.Modules={}
+    self.modules={}
+    self.module=MODULE()
 
-  def ModuleDeclaration(self, lines, moduleName):
+  def ModuleDeclaration(self, lines): #, moduleName):
     _dictModule={}
-    exec('_dictModule', r'={', moduleName, ':', MODULE.FindContents(lines), r'}')
+    # exec('_dictModule', r'={', moduleName, ':', MODULE.FindContents(lines), r'}')
+    _dictModule = self.module.FindContents(lines)
     return _dictModule
 
 class GLOBAL():
-  def __init__(self):
-    self.filelist=[]
+  def __init__(self, fileList):
+    self.top=TOP()
+    self.fileList=fileList
     self.lineCache=[]
-    self.moduleSearch=r'\s?module\s?(\w+)\s?(?'
+    self.moduleSearch=r'\s?module\s(\w+)\s?\(?'
     self.modules={}
+    self.FileReader(fileList)
 
   def FindModule(self, f):
     _moduleName=''
@@ -261,7 +285,8 @@ class GLOBAL():
         continue
 
   def FileAnalyzer(self, moduleName):
-    exec(str(moduleName), '=', TOP.ModuleDeclaration(self.lineCache))
+    _execContents=''.join([str(moduleName), '=', 'self.top.ModuleDeclaration(self.lineCache)'])
+    exec(_execContents)
     exec('self.modules.update', '(', str(moduleName), ')')
 
   def FileReader(self, lst):

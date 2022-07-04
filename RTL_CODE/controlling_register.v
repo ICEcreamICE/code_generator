@@ -29,10 +29,10 @@ output reg one_forth_pipe_enable,
 ``ENDIF
 output reg one_half_pipe_enalbe,
 ```for i in range(3):
-````p  f"input wire for_test_{i};\n"
+````p  f"input wire for_test_{i},\n"
 
 ``FOR {i in range(3)}
-	``IF {i==1}
+	``IF {i==2}
 output reg if_test_``{i}
 	``ELSE
 output reg else_test_``{i},

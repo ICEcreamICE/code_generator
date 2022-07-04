@@ -11,6 +11,7 @@ from ast import parse
 
 # from flow.cg_class.LineParser import LineParser#, tkinter
 from cg_class.LineParser import LineParser#, tkinter
+from cg_class.ModuleParser import *
 
 def option_parser():
   options_dict = {}
@@ -137,7 +138,8 @@ def main():
   _dst=MainProjArgs['DST']
   _parser=LineParser(_src, _dst, _list)
   _parserRslt=_parser.Parser()
-  print("done!")
-  
+  print("done Parsing!")
+  GLOBAL([_dst])
+
 if __name__ == "__main__":
   main()

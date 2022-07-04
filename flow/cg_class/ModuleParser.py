@@ -7,16 +7,16 @@ import re, sys
 class LINE(OVERTURE):
   def __init__(self, line):
     self.line = line
-    self.lineNum = 0
+    self.lineNum = None
     self.linesplits = re.split("( )+", self.line)
     self.name = None #name, ohters(None)
     self.type = None #port, instance, reg/wire, others
-    self.arrayCnt = 0
-    self.width = []
-    self.array = False
+    self.arrayCnt = None
+    self.width = None
+    self.array = None
     self.direction = None #input/output
-    self.autoInstancName=''
-    self.autoInstanceSkipPort=''
+    self.instanceName = None
+    self.instancePort = None
     self.PortDeclaration = [
       'input', 'output', 'inout'
     ]
@@ -34,7 +34,8 @@ class LINE(OVERTURE):
     self.NameAncher = '([a-zA-Z0-9`_$]+)'
     self.LineAncher = '[,;]'
     self.InstanceAncher = '(\w+)'
-    self.InstancePort = '\.(\w+)\s?\(.*\)\s?,'
+    self.InstancePortAncher = '\.(\w+)'
+    self.commentAncher = '\/\/'
     self.UpdateInfo(line)
 
   def HasKeyword(self, element, lst):
@@ -58,8 +59,20 @@ class LINE(OVERTURE):
     else:
       return False
 
-  def UpdateInstanceSkipPort(self):
-    pass
+  def UpdateInstance(self, lst):
+    if re.search(self.LineAncher, self.line):
+      return False
+    else:
+      if re.search(self.InstanceAncher, lst[0]):
+        self.instanceName=lst[0]
+        return True
+      elif re.search(self.InstancePortAncher, lst[0]):
+        self.instancePort=lst[0]
+        return True
+      else:
+        print ('wrong verilog syntax, please check!', '--->', lst[0], 'in', self.line)
+        exit(0)
+        
 
   def UpdateArray(self):
     self.arrayCnt = self.arrayCnt + 1
@@ -121,6 +134,15 @@ class LINE(OVERTURE):
         self.comment = ' '.jion(self.comment, lst[0])
         lst.pop(0)
 
+  def FindComment(self):
+    _isComment = False
+    _list = self.linesplits
+    if re.search(self.commentAncher, _list[0]):
+      _isComment = True
+      return _isComment
+    else:
+      return _isComment
+
   def FindPorts(self):
     _isPort = False
     _list = self.linesplits
@@ -155,11 +177,13 @@ class LINE(OVERTURE):
       if self.HasKeyword(e, self.keywords):
         return _isInstance
       else:
-        continue
+        self.UpdateInstance(_list)
     return _isInstance
 
   def UpdateInfo(self):
-    if self.FindPorts():
+    if self.FindComment():
+      return "comment"
+    elif self.FindPorts():
       return "port"
     elif self.FindDeclaration():
       return "signal"

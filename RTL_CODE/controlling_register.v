@@ -41,38 +41,61 @@ output reg else_test_``{i},
 );
 
 always @(posedge clock, negedge reset) begin
-	if (!reset) begin
-		one_half_pipe_enable <= ``{ONE_HALF_WIDTH}'h0;
-	end
-	else begin
-		if ((address == ``{ADDR_WIDTH}'h``{ONE_HALF_ADDR}) && write_enable) begin
-			one_half_pipe_enable <= #1 write_data[``{ONE_HALF_WIDTH} - 1 : 0];
-		end
-	end
+  if (!reset) begin
+    one_half_pipe_enable <= ``{ONE_HALF_WIDTH}'h0;
+  end
+  else begin
+    if ((address == ``{ADDR_WIDTH}'h``{ONE_HALF_ADDR}) && write_enable) begin
+      one_half_pipe_enable <= #1 write_data[``{ONE_HALF_WIDTH} - 1 : 0];
+    end
+  end
 end
 
 ``IF {ONE_FORTH_COUNTER_ENABLE}
 always @(posedge clock, negedge reset) begin
-	if (!reset) begin
-		one_forth_pipe_enalbe <= ``{ONE_HALF_WIDTH}'h0;
-	end
-	else begin
-		if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && write_enable) begin
-			one_forth_pipe_enable <= #1 write_data[0];
-		end
-	end
+  if (!reset) begin
+    one_forth_pipe_enalbe <= ``{ONE_HALF_WIDTH}'h0;
+  end
+  else begin
+    if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && write_enable) begin
+      one_forth_pipe_enable <= #1 write_data[0];
+    end
+  end
 end
 ``ENDIF
 
 always @* begin
-	if ((address == ``{ADDR_WIDTH}'h``{ONE_HALF_ADDR}) && read_enable) begin
-		read_data = {``{ONE_HALF_READ_ZREO_WIDTH}'h0, one_half_pipe_enable};
-	end
+  if ((address == ``{ADDR_WIDTH}'h``{ONE_HALF_ADDR}) && read_enable) begin
+    read_data = {``{ONE_HALF_READ_ZREO_WIDTH}'h0, one_half_pipe_enable};
+  end
 ``IF {ONE_FORTH_COUNTER_ENABLE}
+<<<<<<< HEAD
 	else if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && read_enable) begin
 	   read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
 	end
 	``ELSE
 		assign read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
+=======
+  else if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && read_enable) begin
+     read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
+  end
+>>>>>>> 3b8f15ec67344571f6f9deeaba5a07aed6511381
 ``ENDIF
 end
+
+//AUTO_INST test_module_1
+test_module_1 i_test_module_1 (
+)
+
+endmodule
+
+module test_module_1 (
+  input a,
+  input b,
+  output c
+)
+``FOR {o in range(2)}
+param TEST_MODULE_1_PARAM``{o}
+``ENDFOR
+
+endmodule

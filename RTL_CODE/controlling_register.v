@@ -69,17 +69,11 @@ always @* begin
     read_data = {``{ONE_HALF_READ_ZREO_WIDTH}'h0, one_half_pipe_enable};
   end
 ``IF {ONE_FORTH_COUNTER_ENABLE}
-<<<<<<< HEAD
 	else if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && read_enable) begin
 	   read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
 	end
 	``ELSE
 		assign read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
-=======
-  else if ((address == ``{ADDR_WIDTH}'h``{ONE_FORTH_ADDR}) && read_enable) begin
-     read_data = {``{ONE_FORTH_READ_ZREO_WIDTH}'h0, one_forth_pipe_enable};
-  end
->>>>>>> 3b8f15ec67344571f6f9deeaba5a07aed6511381
 ``ENDIF
 end
 

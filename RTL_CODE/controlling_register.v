@@ -77,7 +77,7 @@ always @* begin
 ``ENDIF
 end
 
-//AUTO_INST test_module_1
+//AUTOINST test_module_1
 test_module_1 i_test_module_1 (
 )
 

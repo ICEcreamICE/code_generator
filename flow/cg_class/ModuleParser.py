@@ -5,6 +5,237 @@ from telnetlib import Telnet
 from cg_source.Overture import *
 import re, sys
 
+class LEXPARSER(OVERTURE):
+  def __init__(self, verilogFile):
+    self.inputFile=open(verilogFile, "r+")
+    self.symbols={'[':']', '(': ')', '.':'('}
+    self.ends={',', ';'}
+    self.ignoreKeywords={'wire', 'reg'}
+    self.keywords={'input', 'output', 'inout'}
+    self.module='module'
+    self.endmodule='endmodule'
+    self.modules=self.GetModules()
+
+  def GetOneCharacter(self):
+    _character = self.inputFile.read(1)
+    return _character
+  
+  def GetNextString(self, c):
+    _character = c
+    _text = str()
+    while _character.isalnum() or _character == '_':
+      _text += _character
+      _character = self.GetOneCharacter()
+    else:
+      while not (_character.isalnum() or _character == '_'):
+        _character = self.GetOneCharacter()
+      else:
+        while _character.isalnum() or _character == '_':
+          _text += _character
+          _character = self.GetOneCharacter()
+    return _text, _character
+
+  def GetWidth(self, c):
+    _character = c
+    _width = str()
+    _location = self.inputFile.tell()
+    while _character != '[':
+      _character = self.GetOneCharacter()
+      if _character in self.ends:
+        self.inputFile.seek(_location)
+        _character = self.GetOneCharacter()
+        return '1', _character
+    else:
+      _width += _character
+      while _character != ']':
+        if _character == '\n':
+          continue
+        else:
+          _character = self.GetOneCharacter()
+          _width += _character
+      else:
+        if len(_character) == 0:
+          print ('Cannot find right braket')
+          exit(1)
+        else:
+          return _width, _character
+
+  def GetExistSignals(self, c):
+    _character = c
+    _instSignal = list()
+    while _character != ';':
+      _character = self.GetOneCharacter()
+      if _character == '.':
+        _instSignal.append(self.GetNextString(_character))
+      else:
+        continue
+    else:
+      return _instSignal, _character
+
+
+
+  def GetModules(self):
+    _character= self.GetOneCharacter()
+    _text = str()
+    _name = str()
+    _start = int()
+    _end = int()
+    _cmd = str()
+    _dict = dict()
+
+    _module = dict()
+    _modules = dict()
+
+    _input = dict()
+    _inputs = list()
+    _output = dict()
+    _outputs = list()
+    _inout = dict()
+    _inouts = list()
+
+    _autoinst = dict()
+    _autoinsts = list()
+
+    _hasModuleName = False
+
+    while len(_character) != 0:
+      _character = self.GetOneCharacter()
+      _text += _character
+      if _character.isspace() or not (_character.isalnum() or _character == '_'):
+        _text = str()
+      elif not _hasModuleName:
+        if _text == self.module:
+          _start = self.inputFile.tell()
+          _character = self.GetOneCharacter()
+          _name, _character  = self.GetNextString(_character)
+          _cmd = 'temp' + '={\'start\' : ' + str(_start) + '}'
+          exec(_cmd, globals(), _dict)
+          _module.update(_dict['temp'])
+          _hasModuleName = True
+        else:
+          continue
+      elif _text == self.endmodule:
+        _end = self.inputFile.tell()
+        _character = self.GetOneCharacter()
+        _cmd = 'temp' + '={\'end\' : ' + str(_end) + '}'
+        exec(_cmd, globals(), _dict)
+        _module.update(_dict['temp'])
+        _module['inputs'] = _inputs
+        _module['output'] = _outputs
+        _module['inout'] = _inout
+        _module['autoinsts'] = _autoinsts
+        _modules[_name] = _module
+      elif _text in self.keywords:
+        if _text == 'input':
+          _input['width'], _character = self.GetWidth(_character)
+          _input['name'], _character  = self.GetNextString(_character)
+          while _input['name'] in self.ignoreKeywords:
+            _input['name'], _character  = self.GetNextString(_character)
+          _inputs.append(dict(_input))
+        elif _text == 'output':
+          _output['width'], _character = self.GetWidth(_character)
+          _output['name'], _character = self.GetNextString(_character)
+          while _output['name'] in self.ignoreKeywords:
+            _output['name'], _character  = self.GetNextString(_character)
+          _outputs.append(dict(_output))
+        elif _text == 'inout':
+          _inout['width'], _character = self.GetWidth(_character)
+          _inout['name'], _character = self.GetNextString(_character)
+          while _inout['name'] in self.ignoreKeywords:
+            _inout['name'], _character  = self.GetNextString(_character)
+          _inouts.append(dict(_inout))
+        else:
+          print ('wrong condition of keywords')
+          exit(1)
+      elif _text == 'AUTOINST':
+        _character = self.GetOneCharacter()
+        _autoinst['mame'], _character = self.GetNextString(_character)
+        _autoinst['start'], _character = self.GetNextParen(_character)
+        _autoinst['pass'], _character = self.GetExistSignals(_character)
+        _autoinsts.append(_autoinst)
+      elif _text == self.module:
+        print ('two module found without endmodule, syntax error')
+        exit(1)
+      else:
+        continue
+    else:
+      if _name == None:
+        print ('cannot found module in this file')
+        exit(1)
+      else:
+        return _modules
+
+
+  # def GetModuleProperties(self):
+  #   _character = self.GetOneCharacter()
+  #   _text = _character
+  #   _moduleName=str
+  #   _moduleStartPoint=int
+  #   while len(_character) != 0:
+  #     _text = _character
+  #     while not _character.isspace():
+  #       _character = self.GetOneCharacter()
+  #       _text += _character
+  #     else:
+  #       if _text in self.keywords:
+  #         self.
+  #     _character = self.GetOneCharacter()
+
+
+
+  # def GetFollowingSymbol(self, start, expect):
+  #   _text = start
+  #   _character = self.GetOneCharacter()
+  #   while _character != expect:
+  #     if _character in self.ends:
+  #       print ('find end of Command before', start, expect, 'pairs')
+  #       exit(1)
+  #     elif _character == '\n':
+  #       continue
+  #     _test += _character
+  #   return _text
+  
+  # def GetToken(self, c):
+  #   _text = c
+  #   if _text in self.keywords:
+
+
+
+  # def Searching(self):
+  #   _character=self.GetOneCharacter()
+  #   _text = ''
+  #   while len(_character) != 0:
+  #     if _character.isspace:
+  #       _text = ''
+  #     elif _character.isalnum or _character == '_':
+  #       _text += _character
+  #       self.GetToken(_text)
+      
+
+
+ 
+    # err_line = the_line
+    # err_col  = the_col
+ 
+    # if len(_character) == 0:
+    #   return tk_EOI, err_line, err_col
+    # elif _character == '[':
+    #   self.GetFollowingSymbol('[', self.symbols['['])
+    # elif _character == '/':     return div_or_cmt(err_line, err_col)
+    # elif _character == '\'':    return char_lit(err_line, err_col)
+    # elif _character == '<':     return follow('=', tk_Leq, tk_Lss,    err_line, err_col)
+    # elif _character == '>':     return follow('=', tk_Geq, tk_Gtr,    err_line, err_col)
+    # elif _character == '=':     return follow('=', tk_Eq,  tk_Assign, err_line, err_col)
+    # elif _character == '!':     return follow('=', tk_Neq, tk_Not,    err_line, err_col)
+    # elif _character == '&':     return follow('&', tk_And, tk_EOI,    err_line, err_col)
+    # elif _character == '|':     return follow('|', tk_Or,  tk_EOI,    err_line, err_col)
+    # elif _character == '"':     return string_lit(_character, err_line, err_col)
+    # elif _character in self.symbols:
+    #   _end = self.symbols[_character]
+    #   self.GetOneCharacter()
+    #   return sym, err_line, err_col
+    # else: return ident_or_int(err_line, err_col)
+
 class LINE(OVERTURE):
   def __init__(self, line, number):
     self.line = line.rstrip()

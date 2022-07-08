@@ -139,7 +139,8 @@ def main():
   _parser=LineParser(_src, _dst, _list)
   _parserRslt=_parser.Parser()
   print("done Parsing!")
-  GLOBAL([_dst])
+  # GLOBAL([_dst])
+  LEXPARSER(_dst)
 
 if __name__ == "__main__":
   main()

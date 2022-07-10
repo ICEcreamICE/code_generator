@@ -1,6 +1,7 @@
 from lzma import MODE_FAST
 from opcode import hascompare
 from operator import mod
+from ssl import VerifyFlags
 from telnetlib import Telnet
 from turtle import end_fill
 from unicodedata import name
@@ -9,7 +10,8 @@ import re, sys
 
 class LEXPARSER(OVERTURE):
   def __init__(self, verilogFile):
-    self.inputFile=open(verilogFile, "r+")
+    self.inputFile=open(verilogFile, "rb+")
+    self.currentFile=verilogFile
     self.symbols={'[':']', '(': ')', '.':'('}
     self.ends={',', ';'}
     self.ignoreKeywords={'wire', 'reg'}
@@ -18,9 +20,19 @@ class LEXPARSER(OVERTURE):
     self.endmodule='endmodule'
     self.modules=self.GetModules()
 
+  def TrimCR(self):
+    fb = self.inputFile.read()
+    new = fb.replace(b'\r\n', b'\n')
+    self.inputFile.seek(0)
+    self.inputFile.truncate()
+    self.inputFile.write(new)
+    self.inputFile=open(self.currentFile, "r+")
+
   def GetOneCharacter(self):
     _character = self.inputFile.read(1)
+    print(self.inputFile.tell(), _character)
     return _character
+    # return ' '
   
   def GetNextString(self, c):
     _character = c
@@ -102,6 +114,7 @@ class LEXPARSER(OVERTURE):
         return _start, _character
 
   def GetModules(self):
+    self.TrimCR()
     _character= self.GetOneCharacter()
     _text = str()
     _name = str()

@@ -40,11 +40,7 @@ end
  
 //AUTOINST test_module_1 
 test_module_1 i_test_module_1 ( 
-); 
- 
-endmodule 
- 
-module test_module_1 ( 
+
 .a (a[1:0]),
 .b (b[`defM:`defL]),
 .c (c),

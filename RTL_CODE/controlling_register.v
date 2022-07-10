@@ -79,17 +79,23 @@ end
 
 //AUTOINST test_module_1
 test_module_1 i_test_module_1 (
-)
+);
 
 endmodule
 
 module test_module_1 (
-  input a,
-  input b,
-  output c
-)
-``FOR {o in range(2)}
-param TEST_MODULE_1_PARAM``{o}
+  input wire [1:0] a, 
+  input wire [`defM:`defL]b, 
+  output wire c,
+  inout wire d
+);
+
+``FOR {o in range(4)}
+  ``IF {o == 3}
+param TEST_MODULE_``{o}_PARAM``{o}
+  ``ELSE
+param TEST_MODULE_1_PARAM``{o},
+  ``ENDIF
 ``ENDFOR
 
 endmodule

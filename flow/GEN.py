@@ -140,7 +140,9 @@ def main():
   _parserRslt=_parser.Parser()
   print("done Parsing!")
   # GLOBAL([_dst])
-  LEXPARSER(_dst)
+  _m=LEXPARSER(_dst)
+  _m.AutoGenerate()
+  print("auto done!")
 
 if __name__ == "__main__":
   main()

@@ -30,7 +30,7 @@ class LEXPARSER(OVERTURE):
 
   def GetOneCharacter(self):
     _character = self.inputFile.read(1)
-    print(self.inputFile.tell(), _character)
+    # print(self.inputFile.tell(), _character)
     return _character
     # return ' '
   
@@ -74,21 +74,23 @@ class LEXPARSER(OVERTURE):
         else:
           return _width, _character
 
-  def GetExistSignals(self, c):
-    _character = c
+  def GetExistSignals(self, start):
+    self.inputFile.seek(start)
+    _character = self.GetOneCharacter()
     _instSignal = list()
     while _character != ';':
-      if _character == '.':
+      # if _character == '.':
         _instSignal.append(self.GetNextString(_character))
-      else:
+      # else:
+        # _character = self.GetOneCharacter()
         _character = self.GetOneCharacter()
     else:
       return _instSignal, _character
 
   def GetNextParen(self, c):
     _character = c
-    _text = str()
     _start = int()
+    _pass = list()
     _hasManualSignal=False
     while _character != '(':
       if _character == '#':
@@ -98,10 +100,11 @@ class LEXPARSER(OVERTURE):
         _character = self.GetOneCharacter()
     else:
       while _character != ';':
-        if _character == ',':
-          _start = self.inputFile.tell()
+        if _character == '.':
           _hasManualSignal = True
-          _character = self.GetOneCharacter()
+          # _character = self.GetOneCharacter()
+          _pass, _character = self.GetExistSignals(self.inputFile.tell())
+          _start = self.inputFile.tell()
         elif not _hasManualSignal:
           if _character == ')':
             _start = self.inputFile.tell() - 1
@@ -111,7 +114,7 @@ class LEXPARSER(OVERTURE):
         else:
           _character = self.GetOneCharacter()
       else:
-        return _start, _character
+        return _start, _pass, _character
 
   def GetModules(self):
     self.TrimCR()
@@ -201,8 +204,8 @@ class LEXPARSER(OVERTURE):
       elif _text == 'AUTOINST':
         _character = self.GetOneCharacter()
         _autoinst['name'], _character = self.GetNextString(_character)
-        _autoinst['start'], _character = self.GetNextParen(_character)
-        _autoinst['pass'], _character = self.GetExistSignals(_character)
+        _autoinst['start'], _autoinst['pass'], _character = self.GetNextParen(_character)
+        # _autoinst['pass'], _character = self.GetExistSignals(_autoinst['start'])
         _autoinsts.append(_autoinst)
       elif _text == self.module:
         print ('two module found without endmodule, syntax error')
@@ -231,62 +234,51 @@ class LEXPARSER(OVERTURE):
       _w=''
     return _w
 
+  def GenInstPortDeclr(self, module, name, total, current):
+    _c = current
+    _line = str()
+    _lines = str()
+    for port in self.modules[module][name]:
+      _portName = '.' + port['name'] + ' '
+      _instName = ('(' + port['name']
+                       + self.WidthTrim(port['width'])
+                       + self.TailDetermine(total, _c)
+                  )
+      _line = _portName + _instName
+      _lines = _lines + _line
+      _c += 1
+    return _lines, _c
 
   def AutoGenerate(self):
     _start = int()
-    _restStart = int()
     _contentsBeforeStart = str()
     _contentsRest = str()
-    _portName = str()
-    _instName = str()
-    _line = str()
+    _inputLines = str()
+    _outputLines = str()
+    _inputLines = str()
     _lines = '\n'
     _newFile = str()
     _totalPortsNum = int()
     _currentInstPortsNum = 0
     for _module in self.modules:
-      if 'autoinsts' in self.modules[_module]:
-        for _inst in self.modules[_module]['autoinsts']:
-          _start = _inst['start']
-          self.inputFile.seek(0)
-          _contentsBeforeStart = self.inputFile.read(_start)
-          self.inputFile.seek(_start)
-          _contentsRest = self.inputFile.read()
-          _auto = _inst['name']
-          _totalPortsNum = (len(self.modules[_auto]['inputs']) 
-                          + len(self.modules[_auto]['outputs']) 
-                          + len(self.modules[_auto]['inouts'])
-                          )
-          for _input in self.modules[_auto]['inputs']:
-            _portName = '.' + _input['name'] + ' '
-            _instName = ('(' + _input['name']
-                             + self.WidthTrim(_input['width'])
-                             + self.TailDetermine(_totalPortsNum, _currentInstPortsNum)
+      for _inst in self.modules[_module]['autoinsts']:
+        _start = _inst['start']
+        self.inputFile.seek(0)
+        _contentsBeforeStart = self.inputFile.read(_start)
+        self.inputFile.seek(_start)
+        _contentsRest = self.inputFile.read()
+        _auto = _inst['name']
+        _totalPortsNum = (len(self.modules[_auto]['inputs']) 
+                        + len(self.modules[_auto]['outputs']) 
+                        + len(self.modules[_auto]['inouts'])
                         )
-            _line = _portName + _instName
-            _lines = _lines + _line
-            _currentInstPortsNum += 1
-          for _output in self.modules[_auto]['outputs']:
-            _portName = '.' + _output['name'] + ' '
-            _instName = ('(' + _output['name'] 
-                             + self.WidthTrim(_output['width'])
-                             + self.TailDetermine(_totalPortsNum, _currentInstPortsNum)
-                        )
-            _line = _portName + _instName
-            _lines = _lines + _line
-            _currentInstPortsNum += 1
-          for _inout in self.modules[_auto]['inouts']:
-            _portName = '.' + _inout['name'] + ' '
-            _instName = ('(' + _inout['name'] 
-                             + self.WidthTrim(_inout['width']) 
-                             + self.TailDetermine(_totalPortsNum, _currentInstPortsNum)
-                        )
-            _line = _portName + _instName
-            _lines = _lines + _line
-            _currentInstPortsNum += 1
-        _newFile = _contentsBeforeStart + _lines + _contentsRest
+        _inputLines, _currentInstPortsNum = self.GenInstPortDeclr(_auto, 'inputs', _totalPortsNum, _currentInstPortsNum)
+        _outputLines, _currentInstPortsNum = self.GenInstPortDeclr(_auto, 'outputs', _totalPortsNum, _currentInstPortsNum)
+        _inoutLines, _currentInstPortsNum = self.GenInstPortDeclr(_auto, 'inouts', _totalPortsNum, _currentInstPortsNum)
+
+        _lines = _lines + _inputLines + _outputLines + _inoutLines
+      _newFile = _contentsBeforeStart + _lines + _contentsRest
     self.inputFile.seek(0)
     self.inputFile.truncate()
     self.inputFile.write(_newFile)
-        #   self.inputFile.writelines(self.modules[_module]['autoinsts']['name'],'\n')
     self.inputFile.close()

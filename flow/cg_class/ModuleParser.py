@@ -3,6 +3,7 @@ from opcode import hascompare
 from operator import mod
 from ssl import VerifyFlags
 from telnetlib import Telnet
+from tempfile import tempdir
 from turtle import end_fill
 from unicodedata import name
 from cg_source.Overture import *
@@ -19,6 +20,7 @@ class LEXPARSER(OVERTURE):
     self.module='module'
     self.endmodule='endmodule'
     self.modules=self.GetModules()
+    # self.temp = ''
 
   def TrimCR(self):
     fb = self.inputFile.read()
@@ -119,6 +121,28 @@ class LEXPARSER(OVERTURE):
       else:
         return _start, _pass, _character
 
+  def GetKeyWordsProperty(self, name, character):
+    _c = character
+    _cmd =str()
+    _dict = dict()
+    temp = dict()
+    if name in self.keywords:
+      _cmd = ''.join([r't=', f'self.GetWidth("{_c}")'])
+      exec(_cmd, globals(), locals())
+      temp['width'] = locals()['t'][0]
+      _c = locals()['t'][1]
+      _cmd = ''.join([r't=', f'self.GetNextString("{_c}")'])
+      exec(_cmd, globals(), locals())
+      temp['name'] = locals()['t'][0]
+      _c = locals()['t'][1]
+      while temp['name'] in self.ignoreKeywords:
+        # _cmd = ''.join([r't=', f'self.GetNextString("{_c}")'])
+        exec(_cmd, globals(), locals())
+        temp['name'] = locals()['t'][0]
+        _c = locals()['t'][1]
+      _dict = temp
+    return _dict, _c
+
   def GetModules(self):
     self.TrimCR()
     _character= self.GetOneCharacter()
@@ -141,6 +165,8 @@ class LEXPARSER(OVERTURE):
 
     _autoinst = dict()
     _autoinsts = list()
+
+    _return = tuple()
 
     _hasModuleName = False
 
@@ -184,11 +210,14 @@ class LEXPARSER(OVERTURE):
         _module = dict()
       elif _text in self.keywords:
         if _text == 'input':
-          _input['width'], _character = self.GetWidth(_character)
-          _input['name'], _character  = self.GetNextString(_character)
-          while _input['name'] in self.ignoreKeywords:
-            _input['name'], _character  = self.GetNextString(_character)
-          _inputs.append(dict(_input))
+          # _input['width'], _character = self.GetWidth(_character)
+          # _input['name'], _character  = self.GetNextString(_character)
+          # while _input['name'] in self.ignoreKeywords:
+          #   _input['name'], _character  = self.GetNextString(_character)
+          # _inputs.append(dict(_input))
+          _return = self.GetKeyWordsProperty(_text, _character)
+          _inputs.append(_return[0])
+          _character = _return[1]
         elif _text == 'output':
           _output['width'], _character = self.GetWidth(_character)
           _output['name'], _character = self.GetNextString(_character)

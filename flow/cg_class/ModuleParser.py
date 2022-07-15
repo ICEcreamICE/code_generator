@@ -20,7 +20,6 @@ class LEXPARSER(OVERTURE):
     self.module='module'
     self.endmodule='endmodule'
     self.modules=self.GetModules()
-    # self.temp = ''
 
   def TrimCR(self):
     fb = self.inputFile.read()
@@ -32,9 +31,7 @@ class LEXPARSER(OVERTURE):
 
   def GetOneCharacter(self):
     _character = self.inputFile.read(1)
-    # print(self.inputFile.tell(), _character)
     return _character
-    # return ' '
   
   def GetNextString(self, c):
     _character = c
@@ -80,13 +77,8 @@ class LEXPARSER(OVERTURE):
     self.inputFile.seek(start)
     _character = self.GetOneCharacter()
     _instSignal = list()
-    # while _character != ';':
-      # if _character == '.':
     _instSignal.append(self.GetNextString(_character))
-      # else:
-        # _character = self.GetOneCharacter()
     _character = self.GetOneCharacter()
-    # else:
     return _instSignal, _character
 
   def GetNextParen(self, c):
@@ -104,8 +96,6 @@ class LEXPARSER(OVERTURE):
       while _character != ';':
         if _character == '.':
           _hasManualSignal = True
-          # _character = self.GetOneCharacter()
-          # _pass, _character = self.GetExistSignals(self.inputFile.tell())
           _pass.append(self.GetNextString(_character)[0])
           _character = self.GetNextString(_character)[1]
           _character = self.GetOneCharacter()
@@ -136,7 +126,6 @@ class LEXPARSER(OVERTURE):
       temp['name'] = locals()['t'][0]
       _c = locals()['t'][1]
       while temp['name'] in self.ignoreKeywords:
-        # _cmd = ''.join([r't=', f'self.GetNextString("{_c}")'])
         exec(_cmd, globals(), locals())
         temp['name'] = locals()['t'][0]
         _c = locals()['t'][1]
@@ -152,22 +141,14 @@ class LEXPARSER(OVERTURE):
     _end = int()
     _cmd = str()
     _dict = dict()
-
     _module = dict()
     _modules = dict()
-
-    _input = dict()
     _inputs = list()
-    _output = dict()
     _outputs = list()
-    _inout = dict()
     _inouts = list()
-
     _autoinst = dict()
     _autoinsts = list()
-
     _return = tuple()
-
     _hasModuleName = False
 
     while len(_character) != 0:
@@ -199,45 +180,21 @@ class LEXPARSER(OVERTURE):
         _modules[_name] = _module
         #reset to default
         _hasModuleName = False
-        _input = dict()
         _inputs = list()
-        _output = dict()
         _outputs = list()
-        _inout = dict()
         _inouts = list()
         _autoinst = dict()
         _autoinsts = list()
         _module = dict()
       elif _text in self.keywords:
-        if _text == 'input':
-          # _input['width'], _character = self.GetWidth(_character)
-          # _input['name'], _character  = self.GetNextString(_character)
-          # while _input['name'] in self.ignoreKeywords:
-          #   _input['name'], _character  = self.GetNextString(_character)
-          # _inputs.append(dict(_input))
-          _return = self.GetKeyWordsProperty(_text, _character)
-          _inputs.append(_return[0])
-          _character = _return[1]
-        elif _text == 'output':
-          _output['width'], _character = self.GetWidth(_character)
-          _output['name'], _character = self.GetNextString(_character)
-          while _output['name'] in self.ignoreKeywords:
-            _output['name'], _character  = self.GetNextString(_character)
-          _outputs.append(dict(_output))
-        elif _text == 'inout':
-          _inout['width'], _character = self.GetWidth(_character)
-          _inout['name'], _character = self.GetNextString(_character)
-          while _inout['name'] in self.ignoreKeywords:
-            _inout['name'], _character  = self.GetNextString(_character)
-          _inouts.append(dict(_inout))
-        else:
-          print ('wrong condition of keywords')
-          exit(1)
+        _return = self.GetKeyWordsProperty(_text, _character)
+        _cmd = ''.join(['_', _text, 's', '.append(_return[0])'])
+        exec(_cmd, globals(), locals())
+        _character = _return[1]
       elif _text == 'AUTOINST':
         _character = self.GetOneCharacter()
         _autoinst['name'], _character = self.GetNextString(_character)
         _autoinst['start'], _autoinst['pass'], _character = self.GetNextParen(_character)
-        # _autoinst['pass'], _character = self.GetExistSignals(_autoinst['start'])
         _autoinsts.append(_autoinst)
       elif _text == self.module:
         print ('two module found without endmodule, syntax error')
